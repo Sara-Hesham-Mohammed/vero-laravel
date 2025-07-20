@@ -155,9 +155,11 @@ class UserController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], status: 401);
+        }
 
-
-        //make session here?
+        // TODO: Create a session or token here //
 
         return response()->json(['user' => $user], 200);
     }
