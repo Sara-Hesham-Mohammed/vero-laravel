@@ -25,24 +25,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'mobile_number' => 'required|string|max:15',
-            'password' => 'required|string|min:6',
-        ]);
-
-        $validated['password'] = bcrypt($validated['password']);
-
-        $user = User::create($validated);
-
-        return $user;
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -117,18 +99,11 @@ class UserController extends Controller
             $user->password = Hash::make($password);
             $user->save();
             return response()->json(data: ['success' => true]);
-        }else {
+        } else {
             return response()->json(['success' => false, 'message' => 'Passwords do not match']);
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -172,5 +147,41 @@ class UserController extends Controller
         $user = User::find($id);
         $user->delete();
         return response()->json([], 200);
+    }
+
+
+    public function assign_role(Request $req, int $id)
+    {
+        $validated = $req->validate([
+            'role' => 'required|string'
+        ]);
+        $user = User::find($id);
+         if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $role = $validated['role'];
+        $user->assignRole($role);
+
+        return response()->json(['message' => "Role '{$role}' assigned to user {$id}"], 200);
+    }
+
+    public function get_roles(int $id){
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        $roles = $user->getRoleNames();
+        return response()->json(['roles' => $roles], 200);
+    }
+    public function get_permissions(int $id){
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        $permissions = $user->getAllPermissions();
+        return response()->json(['permissions' => $permissions], 200);
     }
 }
